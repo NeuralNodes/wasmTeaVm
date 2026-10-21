@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.example</groupId>
+  <artifactId>mathlib-wasm</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+
+  <name>mathlib-wasm</name>
+  <description>Java library die met TeaVM naar WebAssembly (Wasm GC) wordt gecompileerd en vanuit JavaScript wordt aangeroepen</description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>17</maven.compiler.release>
+    <teavm.version>0.16.0</teavm.version>
+    <junit.version>5.11.4</junit.version>
+    <!-- Alles wat de browser nodig heeft komt hier terecht -->
+    <webapp.dir>${project.build.directory}/web</webapp.dir>
+  </properties>
+
+  <dependencies>
+    <!-- Java class library voor TeaVM (nodig bij het compileren naar Wasm/JS) -->
+    <dependency>
+      <groupId>org.teavm</groupId>
+      <artifactId>teavm-classlib</artifactId>
+      <version>${teavm.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Annotaties + JS-interop API (@JSExport, @JSProperty, @JSBody, JSObject).
+         De implementatie wordt door TeaVM zelf ingevuld, niet door deze jar. -->
+    <dependency>
+      <groupId>org.teavm</groupId>
+      <artifactId>teavm-jso</artifactId>
+      <version>${teavm.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.2</version>
+      </plugin>
+
+      <!-- 1) Java -> WebAssembly (Wasm GC) -->
+      <plugin>
+        <groupId>org.teavm</groupId>
+        <artifactId>teavm-maven-plugin</artifactId>
+        <version>${teavm.version}</version>
+        <executions>
+          <execution>
+            <id>teavm-wasm</id>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <targetType>WEBASSEMBLY_GC</targetType>
+              <targetDirectory>${webapp.dir}/wasm-gc</targetDirectory>
+              <targetFileName>lib.wasm</targetFileName>
+              <mainClass>com.example.mathlib.MathLib</mainClass>
+              <debugInformationGenerated>true</debugInformationGenerated>
+            </configuration>
+          </execution>
+
+          <!-- 2) De statische Wasm runtime-loader (TeaVM.wasmGC.load) -->
+          <execution>
+            <id>teavm-wasm-runtime</id>
+            <goals>
+              <goal>copy-webassembly-gc-runtime</goal>
+            </goals>
+            <configuration>
+              <targetDirectory>${webapp.dir}/wasm-gc</targetDirectory>
+              <runtimeFileName>lib.wasm-runtime.js</runtimeFileName>
+              <!-- ES-module variant: levert een named export `load` op -->
+              <modular>true</modular>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- 3) De demo-webapp naast de Wasm-artifacts zetten -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.3.1</version>
+        <executions>
+          <execution>
+            <id>copy-webapp</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${webapp.dir}</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>web</directory>
+                  <filtering>false</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <!-- Alternatief: hetzelfde Java-project naar "gewoon" JavaScript compileren -->
+    <profile>
+      <id>js</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.teavm</groupId>
+            <artifactId>teavm-maven-plugin</artifactId>
+            <version>${teavm.version}</version>
+            <executions>
+              <execution>
+                <id>teavm-js</id>
+                <goals>
+                  <goal>compile</goal>
+                </goals>
+                <configuration>
+                  <targetType>JAVASCRIPT</targetType>
+                  <jsModuleType>ES2015</jsModuleType>
+                  <targetDirectory>${webapp.dir}/js</targetDirectory>
+                  <targetFileName>lib.js</targetFileName>
+                  <mainClass>com.example.mathlib.MathLib</mainClass>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+</project>

@@ -1,0 +1,15 @@
+{
+  "name": "mathlib-wasm-demo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Java-library gecompileerd naar WebAssembly met TeaVM, aangeroepen vanuit JavaScript",
+  "scripts": {
+    "build": "mvn -B process-classes",
+    "build:js": "mvn -B -Pjs process-classes",
+    "test:java": "mvn -B test",
+    "test:wasm": "node tools/smoke-test.mjs",
+    "test": "npm run test:java && npm run test:wasm",
+    "start": "node tools/serve.mjs"
+  }
+}

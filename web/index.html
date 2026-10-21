@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Java in WebAssembly — TeaVM</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header>
+  <h1>Java in WebAssembly</h1>
+  <p class="sub">
+    Deze pagina roept Java-methodes aan die met <a href="https://teavm.org">TeaVM</a> naar
+    <code>wasm-gc/lib.wasm</code> zijn gecompileerd. Alle berekeningen hieronder gebeuren in de
+    Wasm-module; JavaScript doet niets anders dan de functies aanroepen en de uitkomst tonen.
+  </p>
+  <p id="status" class="status">Wasm-module aan het laden…</p>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Getallen uit Java</h2>
+    <label>
+      faculteit van
+      <input id="fac-n" type="number" value="10" min="0" max="20">
+    </label>
+    <output id="fac-out">—</output>
+    <p class="hint"><code>long</code> wordt in Wasm een JS <code>BigInt</code>.</p>
+  </section>
+
+  <section class="card">
+    <h2>Priemgetallen</h2>
+    <label>
+      is
+      <input id="prime-n" type="number" value="7919" min="0">
+      priem?
+    </label>
+    <output id="prime-out">—</output>
+    <label>
+      alle priemen tot
+      <input id="primes-limit" type="number" value="100" min="0" max="100000">
+    </label>
+    <div id="primes-out" class="chips">—</div>
+  </section>
+
+  <section class="card">
+    <h2>Tekst (Strings heen en terug)</h2>
+    <label>
+      naam
+      <input id="greet-name" type="text" value="wereld">
+    </label>
+    <output id="greet-out">—</output>
+  </section>
+
+  <section class="card">
+    <h2>Tekstanalyse met de Java class library</h2>
+    <label>
+      <textarea id="words-text" rows="3">De zee en de vis en de vis, vis! Alles wat je hier ziet is in Java geteld.</textarea>
+    </label>
+    <label>
+      top
+      <input id="words-k" type="number" value="5" min="1" max="20">
+      woorden
+    </label>
+    <output id="words-out">—</output>
+  </section>
+
+  <section class="card">
+    <h2>Java-objecten</h2>
+    <p class="hint">De klasse <code>Point</code> is volledig naar JS geëxporteerd: constructor, properties en methodes.</p>
+    <div class="row">
+      <input id="ax" type="number" value="0" aria-label="x van A">,
+      <input id="ay" type="number" value="0" aria-label="y van A">
+      <span>→</span>
+      <input id="bx" type="number" value="3" aria-label="x van B">,
+      <input id="by" type="number" value="4" aria-label="y van B">
+    </div>
+    <output id="point-out">—</output>
+  </section>
+
+  <section class="card">
+    <h2>JS-object als parameter (overlay type)</h2>
+    <p class="hint">Je geeft een gewoon JS-object mee; Java leest er <code>r</code>, <code>g</code> en <code>b</code> uit.</p>
+    <div class="row">
+      <input id="color-r" type="range" min="0" max="255" value="255" aria-label="rood">
+      <input id="color-g" type="range" min="0" max="255" value="128" aria-label="groen">
+      <input id="color-b" type="range" min="0" max="255" value="0" aria-label="blauw">
+      <span id="color-swatch" class="swatch"></span>
+    </div>
+    <output id="color-out">—</output>
+  </section>
+
+  <section class="card">
+    <h2>Snelheid: Java in Wasm vs. JavaScript</h2>
+    <p class="hint">Som van alle priemgetallen onder 2.000.000, één keer in Java (Wasm) en één keer in JS.</p>
+    <button id="bench-btn" type="button">Meet</button>
+    <output id="bench-out">—</output>
+  </section>
+</main>
+
+<footer>
+  Broncode: <code>src/main/java/com/example/mathlib</code> · build: <code>mvn process-classes</code> ·
+  server: <code>node tools/serve.mjs</code>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
